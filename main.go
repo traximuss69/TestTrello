@@ -39,5 +39,29 @@ func main() {
 		fmt.Println("0. Выход")
 		fmt.Print("Введите число:")
 		fmt.Scan(&write)
+		if write == 1 {
+			var title string
+			fmt.Println("Введите название доски:")
+			fmt.Scan(&title)
+			newBoard := Board{
+				ID:    boardID,
+				Title: title,
+				Lists: []List{},
+			}
+			boardID++
+			board = append(board, newBoard)
+			fmt.Println("Таблица создана")
+		}
+		if write == 2 {
+			if len(board) == 0 {
+				fmt.Println("Досок пока нету")
+			}
+			for _, board := range board {
+				fmt.Println(board.Title)
+			}
+		}
+		if write == 0 {
+			return
+		}
 	}
 }
