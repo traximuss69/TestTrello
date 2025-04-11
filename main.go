@@ -15,16 +15,34 @@ type Card struct {
 }
 
 type List struct {
-	ID    int
-	Title string
-	Cards []Card
+	ID        int
+	Title     string
+	Cards     []Card
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 type Board struct {
-	ID    int
-	Title string
-	Lists []List
+	ID        int
+	Title     string
+	Lists     []List
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
+func remove(board *Board, listID int) {
+	found := false
+	for i, list := range board.Lists {
+		if list.ID == listID {
+			board.Lists = append(board.Lists[:i], board.Lists[i+1:]...)
+			found = true
+			fmt.Println("Лист успешно удален✅", list.Title)
+			break
+		}
+	}
+	if !found {
+		fmt.Println("Список не найден❌")
+	}
+}
 func main() {
 	var board []Board
 	var boardID int
@@ -44,9 +62,11 @@ func main() {
 			fmt.Print("Введите название доски:")
 			fmt.Scan(&title)
 			newBoard := Board{
-				ID:    boardID,
-				Title: title,
-				Lists: []List{},
+				ID:        boardID,
+				Title:     title,
+				Lists:     []List{},
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
 			}
 			boardID++
 			board = append(board, newBoard)
@@ -83,7 +103,6 @@ func main() {
 				continue
 			}
 			var IDlist int
-			var list []List
 			for {
 				fmt.Println("Работа с доской:", selectboard.Title)
 				fmt.Println("1. Добавить список")
@@ -103,17 +122,26 @@ func main() {
 						Cards: []Card{},
 					}
 					IDlist++
-					list = append(list, newList)
+					selectboard.Lists = append(selectboard.Lists, newList)
 					fmt.Println("Лист создан")
 				}
 				if write == 2 {
-					if len(list) == 0 {
+					if len(selectboard.Lists) == 0 {
 						fmt.Println("Листов пока нету")
 						continue
 					}
-					for _, l := range list {
+					for _, l := range selectboard.Lists {
 						fmt.Println(l.Title)
 					}
+				}
+				if write == 3 {
+					for _, l := range selectboard.Lists {
+						fmt.Println(l.Title, l.ID)
+					}
+					fmt.Println("Введите ID листа, который вы хотите удалить")
+					var DeleteID int
+					fmt.Scan(&DeleteID)
+					remove(selectboard, DeleteID)
 				}
 				if write == 5 {
 					fmt.Println("Переход в главное меню")
