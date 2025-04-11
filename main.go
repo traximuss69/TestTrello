@@ -41,7 +41,7 @@ func main() {
 		fmt.Scan(&write)
 		if write == 1 {
 			var title string
-			fmt.Println("Введите название доски:")
+			fmt.Print("Введите название доски:")
 			fmt.Scan(&title)
 			newBoard := Board{
 				ID:    boardID,
@@ -58,6 +58,67 @@ func main() {
 			}
 			for _, board := range board {
 				fmt.Println(board.Title)
+			}
+		}
+		if write == 3 {
+			if len(board) == 0 {
+				fmt.Println("Досок пока нету")
+				continue
+			}
+			for _, b := range board {
+				fmt.Println(b.ID, b.Title)
+			}
+			fmt.Print("Введите номер доски:")
+			var IDcheck int
+			fmt.Scan(&IDcheck)
+			var selectboard *Board
+			for i := range board {
+				if board[i].ID == IDcheck {
+					selectboard = &board[i]
+					break
+				}
+			}
+			if selectboard == nil {
+				fmt.Println("Доска с таким ID не найдена")
+				continue
+			}
+			var IDlist int
+			var list []List
+			for {
+				fmt.Println("Работа с доской:", selectboard.Title)
+				fmt.Println("1. Добавить список")
+				fmt.Println("2. Посмотреть списки")
+				fmt.Println("3. Удалить список")
+				fmt.Println("4. Управлять списком")
+				fmt.Println("5. Вернуться в главное меню")
+				fmt.Print("Выберите действие: ")
+				fmt.Scan(&write)
+				if write == 1 {
+					var title string
+					fmt.Print("Введите название списка")
+					fmt.Scan(&title)
+					newList := List{
+						ID:    IDlist,
+						Title: title,
+						Cards: []Card{},
+					}
+					IDlist++
+					list = append(list, newList)
+					fmt.Println("Лист создан")
+				}
+				if write == 2 {
+					if len(list) == 0 {
+						fmt.Println("Листов пока нету")
+						continue
+					}
+					for _, l := range list {
+						fmt.Println(l.Title)
+					}
+				}
+				if write == 5 {
+					fmt.Println("Переход в главное меню")
+					break
+				}
 			}
 		}
 		if write == 0 {
