@@ -15,7 +15,6 @@ type Card struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
-
 type List struct {
 	ID        int
 	Title     string
@@ -61,11 +60,12 @@ func removeCard(list *List, cardID int) {
 }
 func moveCard(list *List, toList *List, cardID int) {
 	var moveCard Card
+	var index int
 	found := false
 	for i, card := range list.Cards {
 		if card.ID == cardID {
-			moveCard = card
-			list.Cards = append(list.Cards[:i], list.Cards[i+1:]...)
+			moveCard = list.Cards[i]
+			index = i
 			found = true
 			break
 		}
@@ -74,6 +74,7 @@ func moveCard(list *List, toList *List, cardID int) {
 		fmt.Println("Карточка не найдена")
 		return
 	}
+	list.Cards = append(list.Cards[:index], list.Cards[index+1:]...)
 	moveCard.Status = list.Title
 	moveCard.UpdatedAt = time.Now()
 
@@ -104,7 +105,7 @@ func loadFromFile(filename string) ([]Board, error) {
 	return boards, err
 }
 func editCard(card *Card) {
-	var newTitle, newDescription, newStatus string
+	var newTitle, newDescription string
 	fmt.Print("Введите новое название(оставьте пустым если не хотите менять):")
 	fmt.Scan(&newTitle)
 	if newTitle != "" {
@@ -115,19 +116,16 @@ func editCard(card *Card) {
 	if newDescription != "" {
 		card.Description = newDescription
 	}
-	fmt.Print("Введите новый статус(оставьте пустым если не хотите менять):")
-	fmt.Scan(&newStatus)
-	if newStatus != "" {
-		card.Status = newStatus
-	}
 	card.UpdatedAt = time.Now()
 	fmt.Println("Карточка успешно обновлена✅")
 }
 func main() {
 	var board []Board
 	var boardID int
+	boardID = 1
 	var write int
 	var cardID int
+	cardID = 1
 	for {
 		fmt.Println("Выберите действие:")
 		fmt.Println("1. Создать Доску")
@@ -184,6 +182,7 @@ func main() {
 				continue
 			}
 			var IDlist int
+			IDlist = 1
 			for {
 				fmt.Println("Работа с доской:", selectboard.Title)
 				fmt.Println("1. Добавить список")
@@ -192,10 +191,11 @@ func main() {
 				fmt.Println("4. Управлять списком")
 				fmt.Println("5. Вернуться в главное меню")
 				fmt.Print("Выберите действие: ")
-				fmt.Scan(&write)
-				if write == 1 {
+				var writeBoard int
+				fmt.Scan(&writeBoard)
+				if writeBoard == 1 {
 					var title string
-					fmt.Print("Введите название списка")
+					fmt.Print("Введите название списка: ")
 					fmt.Scan(&title)
 					newList := List{
 						ID:    IDlist,
@@ -206,7 +206,7 @@ func main() {
 					selectboard.Lists = append(selectboard.Lists, newList)
 					fmt.Println("Лист создан✅")
 				}
-				if write == 2 {
+				if writeBoard == 2 {
 					if len(selectboard.Lists) == 0 {
 						fmt.Println("Листов пока нету❌")
 						continue
@@ -215,16 +215,16 @@ func main() {
 						fmt.Println(l.Title)
 					}
 				}
-				if write == 3 {
+				if writeBoard == 3 {
 					for _, l := range selectboard.Lists {
 						fmt.Println(l.Title, l.ID)
 					}
-					fmt.Println("Введите ID листа, который вы хотите удалить")
+					fmt.Print("Введите ID листа, который вы хотите удалить")
 					var DeleteID int
 					fmt.Scan(&DeleteID)
 					remove(selectboard, DeleteID)
 				}
-				if write == 4 {
+				if writeBoard == 4 {
 					if len(selectboard.Lists) == 0 {
 						fmt.Println("Список отсуствует❌")
 						continue
@@ -232,7 +232,7 @@ func main() {
 					for _, l := range selectboard.Lists {
 						fmt.Println(l.ID, l.Title)
 					}
-					fmt.Println("Введите ID списка")
+					fmt.Print("Введите ID списка")
 					var listcheck int
 					fmt.Scan(&listcheck)
 
@@ -247,10 +247,9 @@ func main() {
 						fmt.Println("Вы ввели неправильный ID❌")
 						break
 					}
-
 					for {
 						fmt.Println("📂 Меню управления списком")
-						fmt.Println("Вы выбрали список: \"In Progress\"")
+						fmt.Println("Вы выбрали список:", selectlist.Title)
 						fmt.Println("Что вы хотите сделать?")
 						fmt.Println("1. Посмотреть карточки")
 						fmt.Println("2. Добавить карточку")
@@ -258,26 +257,27 @@ func main() {
 						fmt.Println("4. Переместить карточку в другой список")
 						fmt.Println("5. Редактировать карточку")
 						fmt.Println("6. Вернуться к доске")
-						fmt.Println("Выберите действие:")
-						fmt.Scan(&write)
-						if write == 1 {
+						fmt.Print("Выберите действие:")
+						var writeCart int
+						fmt.Scan(&writeCart)
+						if writeCart == 1 {
 							if len(selectlist.Cards) == 0 {
 								fmt.Println("Карточки отсуствуют❌")
 							} else {
-								fmt.Println("Карточки:")
+								fmt.Println("Карточки: ")
 								for _, card := range selectlist.Cards {
 									fmt.Println(card.ID, card.Title)
 								}
 							}
 						}
-						if write == 2 {
+						if writeCart == 2 {
 							var title string
 							fmt.Print("Введите название карточки")
 							fmt.Scan(&title)
 							newCard := Card{
 								ID:        cardID,
 								Title:     title,
-								Status:    "In Progress",
+								Status:    selectlist.Title,
 								CreatedAt: time.Now(),
 								UpdatedAt: time.Now(),
 							}
@@ -285,7 +285,7 @@ func main() {
 							selectlist.Cards = append(selectlist.Cards, newCard)
 							fmt.Println("Карточка создана✅")
 						}
-						if write == 3 {
+						if writeCart == 3 {
 							var deleteCard int
 							if len(selectlist.Cards) == 0 {
 								fmt.Println("Карта отсуствует❌")
@@ -293,37 +293,53 @@ func main() {
 								for _, card := range selectlist.Cards {
 									fmt.Println(card.ID, card.Title)
 								}
-								fmt.Println("Введите ID карточки, который вы хотите удалить")
+								fmt.Print("Введите ID карточки, который вы хотите удалить")
 								fmt.Scan(&deleteCard)
 								removeCard(selectlist, deleteCard)
 							}
 						}
-						if write == 4 {
+						if writeCart == 4 {
+							if len(selectboard.Lists) < 2 {
+								fmt.Println("Должно быть хотя бы 2 списка")
+								continue
+							}
+							if len(selectlist.Cards) <= 0 {
+								fmt.Println("Карточки отсуствуют")
+								continue
+							}
 							var cardID int
 							var selectIDlist int
-							for _, card := range selectlist.Cards {
-								fmt.Println(card.ID, card.Title)
+							fmt.Print("Карточки в списке: ")
+							for _, l := range selectlist.Cards {
+								fmt.Println(l.ID, l.Title)
 							}
-							fmt.Print("Введите ID карточки:")
+							fmt.Print("Введите ID карточки: ")
 							fmt.Scan(&cardID)
-
-							fmt.Print("Введите ID списка:")
+							fmt.Println("Весь список: ")
+							for _, l := range selectboard.Lists {
+								fmt.Println(l.ID, l.Title)
+							}
+							fmt.Print("Введите ID списка, в который хотите переместить: ")
 							fmt.Scan(&selectIDlist)
 
 							var toList *List
-							for i := range selectlist.Cards {
+							for i := range selectboard.Lists {
 								if selectboard.Lists[i].ID == selectIDlist {
 									toList = &selectboard.Lists[i]
 									break
 								}
 							}
-							if selectlist == nil {
+							if toList == nil {
 								fmt.Println("Неправильный ввод❌")
-							} else {
-								moveCard(selectlist, toList, cardID)
+								continue
 							}
+							if toList.ID == selectlist.ID {
+								fmt.Println("Нельзя переместить в тот же список❌")
+								continue
+							}
+							moveCard(selectlist, toList, cardID)
 						}
-						if write == 5 {
+						if writeCart == 5 {
 							if len(selectlist.Cards) == 0 {
 								fmt.Println("Карта отсуствует❌")
 								continue
@@ -347,14 +363,13 @@ func main() {
 								editCard(selectCard)
 							}
 						}
-						if write == 6 {
+						if writeCart == 6 {
 							fmt.Println("Переход к доске🔙")
 							break
 						}
 					}
-
 				}
-				if write == 5 {
+				if writeBoard == 5 {
 					fmt.Println("Переход в главное меню🔙")
 					break
 				}
