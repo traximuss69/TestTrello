@@ -30,11 +30,11 @@ type Board struct {
 	UpdatedAt time.Time
 }
 
-func remove(board *Board, listID int) {
+func (b *Board) RemoveList(listID int) {
 	found := false
-	for i, list := range board.Lists {
+	for i, list := range b.Lists {
 		if list.ID == listID {
-			board.Lists = append(board.Lists[:i], board.Lists[i+1:]...)
+			b.Lists = append(b.Lists[:i], b.Lists[i+1:]...)
 			found = true
 			fmt.Println("Лист успешно удален✅", list.Title)
 			break
@@ -44,42 +44,25 @@ func remove(board *Board, listID int) {
 		fmt.Println("Список не найден❌")
 	}
 }
-func removeCard(list *List, cardID int) {
-	found := false
-	for i, card := range list.Cards {
+func (l *List) RemoveCard(cardID int) (Card, bool) {
+	for i, card := range l.Cards {
 		if card.ID == cardID {
-			list.Cards = append(list.Cards[:i], list.Cards[i+1:]...)
-			found = true
+			l.Cards = append(l.Cards[:i], l.Cards[i+1:]...)
 			fmt.Println("Карточка успешно удалена", card)
-			break
+			return card, true
 		}
 	}
-	if !found {
-		fmt.Println("Карточка не найдена")
-	}
+	fmt.Println("Карточка не найдена")
+	return Card{}, false
 }
-func moveCard(list *List, toList *List, cardID int) {
-	var moveCard Card
-	var index int
-	found := false
-	for i, card := range list.Cards {
-		if card.ID == cardID {
-			moveCard = list.Cards[i]
-			index = i
-			found = true
-			break
-		}
-	}
+func (l *List) MoveCard(toList *List, cardID int) {
+	moveCard, found := l.RemoveCard(cardID)
 	if !found {
-		fmt.Println("Карточка не найдена")
+		fmt.Println("Карточка не найдена❌")
 		return
 	}
-	list.Cards = append(list.Cards[:index], list.Cards[index+1:]...)
-	moveCard.Status = list.Title
-	moveCard.UpdatedAt = time.Now()
-
 	toList.Cards = append(toList.Cards, moveCard)
-	fmt.Println("Вы успешно переместили карточку")
+	fmt.Println("Карточка успешно перемещена✅", moveCard.Title)
 }
 func saveToFile(boards []Board, filename string) error {
 	file, err := os.Create(filename)
@@ -104,7 +87,7 @@ func loadFromFile(filename string) ([]Board, error) {
 	err = decoder.Decode(&boards)
 	return boards, err
 }
-func editCard(card *Card) {
+func (card *Card) Edit() {
 	var newTitle, newDescription string
 	fmt.Print("Введите новое название(оставьте пустым если не хотите менять):")
 	fmt.Scan(&newTitle)
@@ -181,8 +164,7 @@ func main() {
 				fmt.Println("Доска с таким ID не найдена❌")
 				continue
 			}
-			var IDlist int
-			IDlist = 1
+			listID := 1
 			for {
 				fmt.Println("Работа с доской:", selectboard.Title)
 				fmt.Println("1. Добавить список")
@@ -198,11 +180,11 @@ func main() {
 					fmt.Print("Введите название списка: ")
 					fmt.Scan(&title)
 					newList := List{
-						ID:    IDlist,
+						ID:    listID,
 						Title: title,
 						Cards: []Card{},
 					}
-					IDlist++
+					listID++
 					selectboard.Lists = append(selectboard.Lists, newList)
 					fmt.Println("Лист создан✅")
 				}
@@ -222,7 +204,7 @@ func main() {
 					fmt.Print("Введите ID листа, который вы хотите удалить")
 					var DeleteID int
 					fmt.Scan(&DeleteID)
-					remove(selectboard, DeleteID)
+					selectboard.RemoveList(DeleteID)
 				}
 				if writeBoard == 4 {
 					if len(selectboard.Lists) == 0 {
@@ -295,7 +277,7 @@ func main() {
 								}
 								fmt.Print("Введите ID карточки, который вы хотите удалить")
 								fmt.Scan(&deleteCard)
-								removeCard(selectlist, deleteCard)
+								selectlist.RemoveCard(deleteCard)
 							}
 						}
 						if writeCart == 4 {
@@ -337,10 +319,11 @@ func main() {
 								fmt.Println("Нельзя переместить в тот же список❌")
 								continue
 							}
-							moveCard(selectlist, toList, cardID)
+							selectlist.MoveCard(toList, cardID)
 						}
 						if writeCart == 5 {
 							if len(selectlist.Cards) == 0 {
+
 								fmt.Println("Карта отсуствует❌")
 								continue
 							}
@@ -360,7 +343,7 @@ func main() {
 							if selectCard == nil {
 								fmt.Println("Карточка не найдена❌")
 							} else {
-								editCard(selectCard)
+								selectCard.Edit()
 							}
 						}
 						if writeCart == 6 {
