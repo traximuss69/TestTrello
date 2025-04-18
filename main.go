@@ -1,114 +1,17 @@
 package main
 
 import (
-	"encoding/json"
+	"awesomeProject2/model"
+	"awesomeProject2/storage"
 	"fmt"
-	"os"
 	"time"
 )
 
-type Card struct {
-	ID          int
-	Title       string
-	Description string
-	Status      string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-}
-type List struct {
-	ID        int
-	Title     string
-	Cards     []Card
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-type Board struct {
-	ID        int
-	Title     string
-	Lists     []List
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
-func (b *Board) RemoveList(listID int) {
-	found := false
-	for i, list := range b.Lists {
-		if list.ID == listID {
-			b.Lists = append(b.Lists[:i], b.Lists[i+1:]...)
-			found = true
-			fmt.Println("Лист успешно удален✅", list.Title)
-			break
-		}
-	}
-	if !found {
-		fmt.Println("Список не найден❌")
-	}
-}
-func (l *List) RemoveCard(cardID int) (Card, bool) {
-	for i, card := range l.Cards {
-		if card.ID == cardID {
-			l.Cards = append(l.Cards[:i], l.Cards[i+1:]...)
-			fmt.Println("Карточка успешно удалена", card)
-			return card, true
-		}
-	}
-	fmt.Println("Карточка не найдена")
-	return Card{}, false
-}
-func (l *List) MoveCard(toList *List, cardID int) {
-	moveCard, found := l.RemoveCard(cardID)
-	if !found {
-		fmt.Println("Карточка не найдена❌")
-		return
-	}
-	toList.Cards = append(toList.Cards, moveCard)
-	fmt.Println("Карточка успешно перемещена✅", moveCard.Title)
-}
-func saveToFile(boards []Board, filename string) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(boards)
-}
-func loadFromFile(filename string) ([]Board, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var boards []Board
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&boards)
-	return boards, err
-}
-func (card *Card) Edit() {
-	var newTitle, newDescription string
-	fmt.Print("Введите новое название(оставьте пустым если не хотите менять):")
-	fmt.Scan(&newTitle)
-	if newTitle != "" {
-		card.Title = newTitle
-	}
-	fmt.Print("Введите новое описание(оставьте пустым если не хотите менять):")
-	fmt.Scan(&newDescription)
-	if newDescription != "" {
-		card.Description = newDescription
-	}
-	card.UpdatedAt = time.Now()
-	fmt.Println("Карточка успешно обновлена✅")
-}
 func main() {
-	var board []Board
+	var board []model.Board
 	var boardID int
 	boardID = 1
 	var write int
-	var cardID int
-	cardID = 1
 	for {
 		fmt.Println("Выберите действие:")
 		fmt.Println("1. Создать Доску")
@@ -123,10 +26,10 @@ func main() {
 			var title string
 			fmt.Print("Введите название доски:")
 			fmt.Scan(&title)
-			newBoard := Board{
+			newBoard := model.Board{
 				ID:        boardID,
 				Title:     title,
-				Lists:     []List{},
+				Lists:     []model.List{},
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			}
@@ -153,7 +56,7 @@ func main() {
 			fmt.Print("Введите номер доски:")
 			var IDcheck int
 			fmt.Scan(&IDcheck)
-			var selectboard *Board
+			var selectboard *model.Board
 			for i := range board {
 				if board[i].ID == IDcheck {
 					selectboard = &board[i]
@@ -164,7 +67,6 @@ func main() {
 				fmt.Println("Доска с таким ID не найдена❌")
 				continue
 			}
-			listID := 1
 			for {
 				fmt.Println("Работа с доской:", selectboard.Title)
 				fmt.Println("1. Добавить список")
@@ -179,12 +81,12 @@ func main() {
 					var title string
 					fmt.Print("Введите название списка: ")
 					fmt.Scan(&title)
-					newList := List{
-						ID:    listID,
+					newList := model.List{
+						ID:    selectboard.NextListID,
 						Title: title,
-						Cards: []Card{},
+						Cards: []model.Card{},
 					}
-					listID++
+					selectboard.NextListID++
 					selectboard.Lists = append(selectboard.Lists, newList)
 					fmt.Println("Лист создан✅")
 				}
@@ -218,7 +120,7 @@ func main() {
 					var listcheck int
 					fmt.Scan(&listcheck)
 
-					var selectlist *List
+					var selectlist *model.List
 					for i := range selectboard.Lists {
 						if selectboard.Lists[i].ID == listcheck {
 							selectlist = &selectboard.Lists[i]
@@ -256,14 +158,14 @@ func main() {
 							var title string
 							fmt.Print("Введите название карточки")
 							fmt.Scan(&title)
-							newCard := Card{
-								ID:        cardID,
+							newCard := model.Card{
+								ID:        selectboard.NextCardID,
 								Title:     title,
 								Status:    selectlist.Title,
 								CreatedAt: time.Now(),
 								UpdatedAt: time.Now(),
 							}
-							cardID++
+							selectboard.NextCardID++
 							selectlist.Cards = append(selectlist.Cards, newCard)
 							fmt.Println("Карточка создана✅")
 						}
@@ -304,7 +206,7 @@ func main() {
 							fmt.Print("Введите ID списка, в который хотите переместить: ")
 							fmt.Scan(&selectIDlist)
 
-							var toList *List
+							var toList *model.List
 							for i := range selectboard.Lists {
 								if selectboard.Lists[i].ID == selectIDlist {
 									toList = &selectboard.Lists[i]
@@ -333,7 +235,7 @@ func main() {
 							fmt.Print("Введи ID карточки")
 							var cardID int
 							fmt.Scan(&cardID)
-							var selectCard *Card
+							var selectCard *model.Card
 							for i := range selectlist.Cards {
 								if selectlist.Cards[i].ID == cardID {
 									selectCard = &selectlist.Cards[i]
@@ -362,7 +264,7 @@ func main() {
 			var filename string
 			fmt.Print("Введите имя файла для загрузки: ")
 			fmt.Scan(&filename)
-			loadedBoards, err := loadFromFile(filename)
+			loadedBoards, err := storage.LoadFromFile(filename)
 			if err != nil {
 				fmt.Println("Ошибка при загрузке:", err)
 			} else {
@@ -375,7 +277,7 @@ func main() {
 			var filename string
 			fmt.Print("Введите имя файла для сохранения: ")
 			fmt.Scan(&filename)
-			err := saveToFile(board, filename)
+			err := storage.SaveToFile(board, filename)
 			if err != nil {
 				fmt.Println("Ошибка при сохранении:", err)
 			} else {
