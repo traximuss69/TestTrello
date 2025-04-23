@@ -48,7 +48,11 @@ func main() {
 			newList.CreatedAt = time.Now()
 			newList.UpdatedAt = time.Now()
 			listID++
-			list = append(list, newList)
+			for _, b := range board {
+				if b.ID == newList.BoardID {
+					b.Lists = append(b.Lists, newList)
+				}
+			}
 			w.WriteHeader(http.StatusCreated)
 			json.NewEncoder(w).Encode(list)
 		}
@@ -65,16 +69,48 @@ func main() {
 			newCard.CreatedAt = time.Now()
 			newCard.UpdatedAt = time.Now()
 			cardID++
-			cards = append(cards, newCard)
+			for _, l := range list {
+				if l.ID == newCard.ListID {
+					l.Cards = append(l.Cards, newCard)
+				}
+			}
 			w.WriteHeader(http.StatusCreated)
 			json.NewEncoder(w).Encode(cards)
 		}
 		if r.Method == http.MethodPut {
 			var updatedCard model.Card
-			err := json.NewDecoder(r.Body).Decode(&updatedCard)
-			if err != nil {
+			if err := json.NewDecoder(r.Body).Decode(&updatedCard); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
+			}
+			found := false
+			for i := range cards {
+				if cards[i].ID == updatedCard.ID {
+					cards[i].Title = updatedCard.Title
+					cards[i].Description = updatedCard.Description
+					cards[i].UpdatedAt = time.Now()
+					found = true
+					json.NewEncoder(w).Encode(cards[i])
+					break
+				}
+			}
+			if !found {
+				http.Error(w, "Карточка не найдена", http.StatusNotFound)
+			}
+		}
+		if r.Method == http.MethodDelete {
+			var deletedCard model.Card
+			found := false
+			for i := range cards {
+				if cards[i].ID == deletedCard.ID {
+					cards = append(cards[:i], cards[i+1:]...)
+					fmt.Fprintln(w, "Карточка удалена")
+					found = true
+					break
+				}
+				if !found {
+					http.Error(w, "Карточка не найдена", http.StatusNotFound)
+				}
 			}
 		}
 	})
