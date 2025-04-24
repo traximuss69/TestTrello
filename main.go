@@ -69,12 +69,13 @@ func main() {
 			newCard.CreatedAt = time.Now()
 			newCard.UpdatedAt = time.Now()
 			cardID++
+		zalopka:
 			for _, b := range board {
 				if b.ID == newList.BoardID {
 					for l := range b.Lists {
 						if b.Lists[l].ID == newCard.ListID {
 							b.Lists[l].Cards = append(b.Lists[l].Cards, newCard)
-							break
+							break zalopka
 						}
 					}
 				}
@@ -89,6 +90,7 @@ func main() {
 				return
 			}
 			found := false
+		zaloop:
 			for _, b := range board {
 				if b.ID == updatedCard.BoardID {
 					for l := range b.Lists {
@@ -100,45 +102,51 @@ func main() {
 									b.Lists[l].Cards[j].UpdatedAt = time.Now()
 									found = true
 									json.NewEncoder(w).Encode(b.Lists[l].Cards[j])
-									break
+									break zaloop
+								}
+							}
+						}
+
+					}
+				}
+			}
+			if !found {
+				http.Error(w, "Карточка не найдена", http.StatusNotFound)
+			}
+		}
+		if r.Method == http.MethodDelete {
+			var deletedCard model.Card
+			if err := json.NewDecoder(r.Body).Decode(&deletedCard); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			found := false
+		loop:
+			for b := range board {
+				if board[b].ID == deletedCard.BoardID {
+					for l := range board[b].Lists {
+						if board[b].Lists[l].ID == deletedCard.ID {
+							for c := range board[b].Lists[l].Cards {
+								if cards[c].ID == deletedCard.ID {
+									board[b].Lists[l].RemoveCard(cardID)
+									found = true
+									w.WriteHeader(http.StatusOK)
+									break loop
 								}
 							}
 						}
 					}
 				}
-				if !found {
-					http.Error(w, "Карточка не найдена", http.StatusNotFound)
-				}
-			}
-		}
-		if r.Method == http.MethodDelete {
-			var deletedCard model.Card
-			found := false
-			for _, b := range board {
-				if b.ID != deletedCard.BoardID {
-					continue
-				}
-				for _, l := range b.Lists {
-					if l.ID != deletedCard.ListID {
-						continue
-					}
-					newCards := []model.Card{}
-					for _, c := range l.Cards {
-						if c.ID != deletedCard.ID {
-							newCards = append(newCards, c)
-						} else {
-							found = true
-						}
-					}
-					l.Cards = newCards
-				}
+
 			}
 			if !found {
 				http.Error(w, "Карточка не найдена", http.StatusNotFound)
 			} else {
 				fmt.Fprintln(w, "Карточка удалена", http.StatusOK)
 			}
+
 		}
+
 	})
 	http.ListenAndServe(":8080", nil)
 }
