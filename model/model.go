@@ -1,33 +1,38 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 )
 
 type Card struct {
-	ID          int
-	Title       string
-	Description string
-	Status      string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          int       `json:"id"`
+	BoardID     int       `json:"board_id"`
+	ListID      int       `json:"list_id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 type List struct {
-	ID        int
-	Title     string
-	Cards     []Card
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        int       `json:"id"`
+	BoardID   int       `json:"board_id"`
+	Title     string    `json:"title"`
+	Cards     []Card    `json:"cards"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 type Board struct {
-	ID         int
-	Title      string
-	Lists      []List
-	NextListID int
-	NextCardID int
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	ID         int       `json:"id"`
+	Title      string    `json:"title"`
+	Lists      []List    `json:"lists"`
+	NextListID int       `json:"next_list_id"`
+	NextCardID int       `json:"next_card_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 func (b *Board) RemoveList(listID int) {
@@ -78,4 +83,11 @@ func (card *Card) Edit() {
 	}
 	card.UpdatedAt = time.Now()
 	fmt.Println("Карточка успешно обновлена✅")
+}
+func SendFullJSON(w http.ResponseWriter, board []Board) {
+	w.Header().Set("Content-Type", "application/json")
+	err := json.NewEncoder(w).Encode(board)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
