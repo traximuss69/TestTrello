@@ -1,7 +1,9 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -81,4 +83,11 @@ func (card *Card) Edit() {
 	}
 	card.UpdatedAt = time.Now()
 	fmt.Println("Карточка успешно обновлена✅")
+}
+func SendFullJSON(w http.ResponseWriter, board []Board) {
+	w.Header().Set("Content-Type", "application/json")
+	err := json.NewEncoder(w).Encode(board)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }

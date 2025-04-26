@@ -10,8 +10,6 @@ import (
 
 func main() {
 	var board []model.Board
-	var list []model.List
-	var cards []model.Card
 	boardID := 1
 	listID := 1
 	cardID := 1
@@ -20,7 +18,8 @@ func main() {
 			for _, b := range board {
 				fmt.Fprintln(w, b.Title)
 			}
-		} else if r.Method == http.MethodPost {
+		}
+		if r.Method == http.MethodPost {
 			var newBoard model.Board
 			err := json.NewDecoder(r.Body).Decode(&newBoard)
 			if err != nil {
@@ -33,7 +32,7 @@ func main() {
 			boardID++
 			board = append(board, newBoard)
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(newBoard)
+			model.SendFullJSON(w, board)
 		}
 	})
 	http.HandleFunc("/lists", func(w http.ResponseWriter, r *http.Request) {
@@ -53,13 +52,12 @@ func main() {
 				}
 			}
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(list)
+			model.SendFullJSON(w, board)
 		}
 	})
 	http.HandleFunc("/cards", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			var newCard model.Card
-			var newList model.List
 			err := json.NewDecoder(r.Body).Decode(&newCard)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -71,7 +69,7 @@ func main() {
 			cardID++
 		zalopka:
 			for _, b := range board {
-				if b.ID == newList.BoardID {
+				if b.ID == newCard.BoardID {
 					for l := range b.Lists {
 						if b.Lists[l].ID == newCard.ListID {
 							b.Lists[l].Cards = append(b.Lists[l].Cards, newCard)
@@ -81,9 +79,8 @@ func main() {
 				}
 			}
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(cards)
-		}
-		if r.Method == http.MethodPut {
+			model.SendFullJSON(w, board)
+		} else if r.Method == http.MethodPut {
 			var updatedCard model.Card
 			if err := json.NewDecoder(r.Body).Decode(&updatedCard); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -102,51 +99,51 @@ func main() {
 									b.Lists[l].Cards[j].UpdatedAt = time.Now()
 									found = true
 									json.NewEncoder(w).Encode(b.Lists[l].Cards[j])
+									model.SendFullJSON(w, board)
 									break zaloop
 								}
 							}
 						}
-
 					}
 				}
 			}
 			if !found {
 				http.Error(w, "Карточка не найдена", http.StatusNotFound)
 			}
-		}
-		if r.Method == http.MethodDelete {
-			var deletedCard model.Card
-			if err := json.NewDecoder(r.Body).Decode(&deletedCard); err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			found := false
-		loop:
-			for b := range board {
-				if board[b].ID == deletedCard.BoardID {
-					for l := range board[b].Lists {
-						if board[b].Lists[l].ID == deletedCard.ID {
-							for c := range board[b].Lists[l].Cards {
-								if cards[c].ID == deletedCard.ID {
-									board[b].Lists[l].RemoveCard(cardID)
-									found = true
-									w.WriteHeader(http.StatusOK)
-									break loop
+			if r.Method == http.MethodDelete {
+				var deletedCard model.Card
+				if err := json.NewDecoder(r.Body).Decode(&deletedCard); err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+				found := false
+			loop:
+				for b := range board {
+					if board[b].ID == deletedCard.BoardID {
+						for l := range board[b].Lists {
+							if board[b].Lists[l].ID == deletedCard.ListID {
+								for c := range board[b].Lists[l].Cards {
+									if board[b].Lists[l].Cards[c].ID == deletedCard.ID {
+										board[b].Lists[l].RemoveCard(deletedCard.ID)
+										found = true
+										w.WriteHeader(http.StatusOK)
+										break loop
+									}
 								}
 							}
 						}
 					}
+
+				}
+				if !found {
+					http.Error(w, "Карточка не найдена", http.StatusNotFound)
+				} else {
+					model.SendFullJSON(w, board)
 				}
 
 			}
-			if !found {
-				http.Error(w, "Карточка не найдена", http.StatusNotFound)
-			} else {
-				fmt.Fprintln(w, "Карточка удалена", http.StatusOK)
-			}
 
 		}
-
 	})
 	http.ListenAndServe(":8080", nil)
 }
