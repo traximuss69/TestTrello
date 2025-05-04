@@ -12,3 +12,22 @@ type Card struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
+type CardDTO struct {
+	ID          int    `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	ListID      int    `json:"list_id"`
+}
+type UpdatedCardDTO struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+func CardToDTO(c Card) CardDTO {
+	return CardDTO{
+		ID:          c.ID,
+		Title:       c.Title,
+		Description: c.Description,
+		ListID:      c.ListID,
+	}
+}

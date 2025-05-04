@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"awesomeProject2/model"
+	"awesomeProject2/cmd/model"
 	"time"
 )
 
@@ -20,12 +20,18 @@ func NewStorage() *Storage {
 		cardID:  1,
 	}
 }
-func (s *Storage) GetBoards() []string {
-	titles := []string{}
+func (s *Storage) GetBoards(BoardID *int) []model.Board {
+	var result []model.Board
 	for _, b := range s.Boards {
-		titles = append(titles, b.Title)
+		if BoardID != nil {
+			if b.ID == *BoardID {
+				return []model.Board{b}
+			}
+		} else {
+			result = append(result, b)
+		}
 	}
-	return titles
+	return result
 }
 func (s *Storage) CreateBoard(title string) model.Board {
 	board := model.Board{
@@ -39,14 +45,20 @@ func (s *Storage) CreateBoard(title string) model.Board {
 	s.Boards = append(s.Boards, board)
 	return board
 }
-func (s *Storage) GetList() []string {
-	var titles []string
+func (s *Storage) GetList(ListID *int) []model.List {
+	var result []model.List
 	for _, b := range s.Boards {
 		for _, l := range b.Lists {
-			titles = append(titles, l.Title)
+			if ListID != nil {
+				if l.ID == *ListID {
+					return []model.List{l}
+				}
+			} else {
+				result = append(result, l)
+			}
 		}
 	}
-	return titles
+	return result
 }
 func (s *Storage) CreateList(boardID int, title string) model.List {
 	newList := model.List{
@@ -67,16 +79,22 @@ func (s *Storage) CreateList(boardID int, title string) model.List {
 	}
 	return model.List{}
 }
-func (s *Storage) GetCard() []string {
-	var titles []string
+func (s *Storage) GetCard(CardID *int) []model.Card {
+	var result []model.Card
 	for _, b := range s.Boards {
 		for _, l := range b.Lists {
 			for _, c := range l.Cards {
-				titles = append(titles, c.Title)
+				if CardID != nil {
+					if c.ID == *CardID {
+						return []model.Card{c}
+					}
+				} else {
+					result = append(result, c)
+				}
 			}
 		}
 	}
-	return titles
+	return result
 }
 
 func (s *Storage) CreateCard(boardID int, listID int, title string, description string) model.Card {
