@@ -2,37 +2,42 @@ package service
 
 import (
 	"awesomeProject2/cmd/model"
-	"awesomeProject2/cmd/storage"
 )
 
-type Service struct {
-	Storage *storage.Storage
+type BoardService struct {
+	storage BoardStorage
+}
+type ListService struct {
+	storage ListStorage
+}
+type CardService struct {
+	storage CardStorage
 }
 
-func NewService(storage *storage.Storage) *Service {
-	return &Service{Storage: storage}
+func NewService(storage BoardService) *BoardService {
+	return &BoardService{storage: storage}
 }
-func (s Service) GetBoards(BoardID *int) []model.Board {
-	return s.Storage.GetBoards(BoardID)
+func (s BoardService) GetBoards(BoardID *int) []model.Board {
+	return s.storage.GetBoards(BoardID)
 }
-func (s Service) CreateBoard(title string) model.Board {
-	return s.Storage.CreateBoard(title)
+func (s BoardService) CreateBoard(title string) model.Board {
+	return s.storage.CreateBoard(title)
 }
-func (s Service) GetList(ListID *int) []model.List {
-	return s.Storage.GetList(ListID)
+func (s ListService) GetList(ListID *int) []model.List {
+	return s.storage.GetLists(ListID)
 }
-func (s Service) CreateList(boardID int, title string) model.List {
-	return s.Storage.CreateList(boardID, title)
+func (s ListService) CreateList(boardID int, title string) model.List {
+	return s.storage.CreateList(title, boardID)
 }
-func (s Service) GetCard(CardID *int) []model.Card {
-	return s.Storage.GetCard(CardID)
+func (s CardService) GetCard(CardID *int) []model.Card {
+	return s.storage.GetCards(CardID)
 }
-func (s Service) CreateCard(boardID int, listID int, title string, description string) model.Card {
-	return s.Storage.CreateCard(boardID, listID, title, description)
+func (s CardService) CreateCard(boardID int, listID int, title string, description string) model.Card {
+	return s.storage.CreateCard(title, boardID, listID, description)
 }
-func (s Service) DeleteCard(boardID int, listID int, cardID int) (model.Card, bool) {
-	return s.Storage.DeleteCard(boardID, listID, cardID)
+func (s CardService) DeleteCard(boardID int, listID int, cardID int) (model.Card, error) {
+	return s.storage.DeleteCard(boardID, listID, cardID)
 }
-func (s Service) UpdatedCard(updated model.Card) (model.Card, bool) {
-	return s.Storage.UpdatedCard(updated)
+func (s CardService) UpdatedCard(updated model.Card) (model.Card, error) {
+	return s.storage.UpdateCard(updated)
 }
