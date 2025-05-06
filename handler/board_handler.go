@@ -1,17 +1,16 @@
 package handler
 
 import (
-	"awesomeProject2/cmd/model"
-	"awesomeProject2/cmd/service"
+	"awesomeProject2/cmd/dto"
 	"encoding/json"
 	"net/http"
 )
 
 type BoardHandler struct {
-	Service *service.Service
+	service BoardService
 }
 
-func NewBoardHandler(service *service.Service) *BoardHandler {
+func NewBoardHandler(service BoardService) *BoardHandler {
 	return &BoardHandler{service}
 }
 func (h *BoardHandler) HandleBoards(w http.ResponseWriter, r *http.Request) {
@@ -29,13 +28,13 @@ func (h *BoardHandler) HandleBoards(w http.ResponseWriter, r *http.Request) {
 				boardID = &requestBody.ID
 			}
 		}
-		boards := h.Service.GetBoards(boardID)
-		var dto []model.BoardDTO
+		boards := h.service.GetBoards(boardID)
+		var BoardDTOs []dto.BoardDTO
 		for i := range boards {
-			dto = append(dto, model.BoardToDTO(boards[i]))
+			BoardDTOs = append(BoardDTOs, dto.BoardToDTO(boards[i]))
 		}
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(dto); err != nil {
+		if err := json.NewEncoder(w).Encode(BoardDTOs); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 	} else if r.Method == http.MethodPost {
@@ -46,8 +45,8 @@ func (h *BoardHandler) HandleBoards(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		board := h.Service.CreateBoard(input.Title)
-		dto := model.BoardToDTO(board)
+		board := h.service.CreateBoard(input.Title)
+		dto := dto.BoardToDTO(board)
 		if err := json.NewEncoder(w).Encode(dto); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}

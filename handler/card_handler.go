@@ -1,17 +1,17 @@
 package handler
 
 import (
+	"awesomeProject2/cmd/dto"
 	"awesomeProject2/cmd/model"
-	"awesomeProject2/cmd/service"
 	"encoding/json"
 	"net/http"
 )
 
 type CardHandler struct {
-	Service *service.Service
+	service CardService
 }
 
-func NewCardHandler(service *service.Service) *CardHandler {
+func NewCardHandler(service CardService) *CardHandler {
 	return &CardHandler{service}
 }
 func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
@@ -29,12 +29,12 @@ func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 				cardID = &requestBody.ID
 			}
 		}
-		cards := h.Service.GetCard(cardID)
-		var dto []model.CardDTO
+		cards := h.service.GetCards(cardID)
+		var CardDTOs []dto.CardDTO
 		for i := range cards {
-			dto = append(dto, model.CardToDTO(cards[i]))
+			CardDTOs = append(CardDTOs, dto.CardToDTO(cards[i]))
 		}
-		if err := json.NewEncoder(w).Encode(dto); err != nil {
+		if err := json.NewEncoder(w).Encode(CardDTOs); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 	} else if r.Method == http.MethodPost {
@@ -48,9 +48,9 @@ func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		card := h.Service.CreateCard(input.BoardID, input.ListID, input.Title, input.Description)
-		dto := model.CardToDTO(card)
-		json.NewEncoder(w).Encode(dto)
+		card := h.service.CreateCard(input.Title, input.BoardID, input.ListID, input.Description)
+		CardDTOs := dto.CardToDTO(card)
+		json.NewEncoder(w).Encode(CardDTOs)
 	} else if r.Method == http.MethodDelete {
 		var input struct {
 			BoardID int `json:"board_id"`
@@ -61,18 +61,18 @@ func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		deletedCard, ok := h.Service.DeleteCard(input.BoardID, input.ListID, input.CardID)
-		if !ok {
+		deletedCard, err := h.service.DeleteCard(input.BoardID, input.ListID, input.CardID)
+		if err != nil {
 			http.Error(w, "Error deleting card", http.StatusInternalServerError)
 			return
 		}
-		dto := model.CardToDTO(deletedCard)
+		CardDTOs := dto.CardToDTO(deletedCard)
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(dto); err != nil {
+		if err := json.NewEncoder(w).Encode(CardDTOs); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 	} else if r.Method == http.MethodPut {
-		var updatedCardDTO model.UpdatedCardDTO
+		var updatedCardDTO dto.UpdatedCardDTO
 		if err := json.NewDecoder(r.Body).Decode(&updatedCardDTO); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -81,12 +81,12 @@ func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 			Title:       updatedCardDTO.Title,
 			Description: updatedCardDTO.Description,
 		}
-		updatedCard, ok := h.Service.UpdatedCard(updatedCard)
-		if !ok {
+		updatedCard, err := h.service.UpdateCard(updatedCard)
+		if err != nil {
 			http.Error(w, "Error updating card", http.StatusInternalServerError)
 			return
 		}
-		updatedCardDTOResponse := model.CardToDTO(updatedCard)
+		updatedCardDTOResponse := dto.CardToDTO(updatedCard)
 		json.NewEncoder(w).Encode(updatedCardDTOResponse)
 	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

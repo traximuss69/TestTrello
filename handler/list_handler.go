@@ -1,17 +1,16 @@
 package handler
 
 import (
-	"awesomeProject2/cmd/model"
-	"awesomeProject2/cmd/service"
+	"awesomeProject2/cmd/dto"
 	"encoding/json"
 	"net/http"
 )
 
 type ListHandler struct {
-	Service *service.Service
+	service ListService
 }
 
-func NewListHandler(service *service.Service) *ListHandler {
+func NewListHandler(service ListService) *ListHandler {
 	return &ListHandler{service}
 }
 func (h *ListHandler) HandleLists(w http.ResponseWriter, r *http.Request) {
@@ -29,13 +28,13 @@ func (h *ListHandler) HandleLists(w http.ResponseWriter, r *http.Request) {
 				listID = &requestBody.ID
 			}
 		}
-		lists := h.Service.GetList(listID)
-		var dto []model.ListDTO
+		lists := h.service.GetLists(listID)
+		var ListDTOs []dto.ListDTO
 		for i := range lists {
-			dto = append(dto, model.ListToDTO(lists[i]))
+			ListDTOs = append(ListDTOs, dto.ListToDTO(lists[i]))
 		}
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(dto); err != nil {
+		if err := json.NewEncoder(w).Encode(ListDTOs); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 	} else if r.Method == http.MethodPost {
@@ -47,8 +46,8 @@ func (h *ListHandler) HandleLists(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		list := h.Service.CreateList(input.BoardID, input.Title)
-		dto := model.ListToDTO(list)
+		list := h.service.CreateList(input.Title, input.BoardID)
+		dto := dto.ListToDTO(list)
 		if err := json.NewEncoder(w).Encode(dto); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
