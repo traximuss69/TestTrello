@@ -9,10 +9,12 @@ import (
 
 func main() {
 	store := storage.NewStorage()
-	srv := service.NewService(store)
-	boardHandler := handler.NewBoardHandler(srv)
-	listHandler := handler.NewListHandler(srv)
-	cardHandler := handler.NewCardHandler(srv)
+	boardService := service.NewBoardService(store)
+	listService := service.NewListService(store)
+	cardService := service.NewCardService(store)
+	boardHandler := handler.NewBoardHandler(boardService)
+	listHandler := handler.NewListHandler(listService)
+	cardHandler := handler.NewCardHandler(cardService)
 	http.HandleFunc("/boards", boardHandler.HandleBoards)
 	http.HandleFunc("/lists", listHandler.HandleLists)
 	http.HandleFunc("/cards", cardHandler.HandleCards)

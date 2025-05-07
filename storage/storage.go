@@ -2,6 +2,7 @@ package storage
 
 import (
 	"awesomeProject2/cmd/model"
+	"fmt"
 	"time"
 )
 
@@ -45,7 +46,7 @@ func (s *Storage) CreateBoard(title string) model.Board {
 	s.Boards = append(s.Boards, board)
 	return board
 }
-func (s *Storage) GetList(ListID *int) []model.List {
+func (s *Storage) GetLists(ListID *int) []model.List {
 	var result []model.List
 	for _, b := range s.Boards {
 		for _, l := range b.Lists {
@@ -60,7 +61,7 @@ func (s *Storage) GetList(ListID *int) []model.List {
 	}
 	return result
 }
-func (s *Storage) CreateList(boardID int, title string) model.List {
+func (s *Storage) CreateList(title string, boardID int) model.List {
 	newList := model.List{
 		Title:     title,
 		BoardID:   boardID,
@@ -79,7 +80,7 @@ func (s *Storage) CreateList(boardID int, title string) model.List {
 	}
 	return model.List{}
 }
-func (s *Storage) GetCard(CardID *int) []model.Card {
+func (s *Storage) GetCards(CardID *int) []model.Card {
 	var result []model.Card
 	for _, b := range s.Boards {
 		for _, l := range b.Lists {
@@ -97,7 +98,7 @@ func (s *Storage) GetCard(CardID *int) []model.Card {
 	return result
 }
 
-func (s *Storage) CreateCard(boardID int, listID int, title string, description string) model.Card {
+func (s *Storage) CreateCard(title string, boardID int, listID int, description string) model.Card {
 	newCard := model.Card{
 		Title:       title,
 		Description: description,
@@ -123,7 +124,7 @@ func (s *Storage) CreateCard(boardID int, listID int, title string, description 
 	}
 	return model.Card{}
 }
-func (s *Storage) DeleteCard(boardID int, listID int, cardID int) (model.Card, bool) {
+func (s *Storage) DeleteCard(boardID int, listID int, cardID int) (model.Card, error) {
 	for i := range s.Boards {
 		if s.Boards[i].ID == boardID {
 			for j := range s.Boards[i].Lists {
@@ -132,16 +133,18 @@ func (s *Storage) DeleteCard(boardID int, listID int, cardID int) (model.Card, b
 					for k, c := range cards {
 						if c.ID == cardID {
 							s.Boards[i].Lists[j].Cards = append(cards[:k], cards[k+1:]...)
-							return c, true
+							return c, nil
 						}
 					}
+					return model.Card{}, fmt.Errorf("card %d not found in list %d", cardID, listID)
 				}
 			}
+			return model.Card{}, fmt.Errorf("list %d not found in board %d", listID, boardID)
 		}
 	}
-	return model.Card{}, false
+	return model.Card{}, fmt.Errorf("board %d not found", boardID)
 }
-func (s *Storage) UpdatedCard(updated model.Card) (model.Card, bool) {
+func (s *Storage) UpdateCard(updated model.Card) (model.Card, error) {
 	for i := range s.Boards {
 		if s.Boards[i].ID == updated.BoardID {
 			for j := range s.Boards[i].Lists {
@@ -150,12 +153,14 @@ func (s *Storage) UpdatedCard(updated model.Card) (model.Card, bool) {
 						if s.Boards[i].Lists[j].Cards[c].ID == updated.ID {
 							s.Boards[i].Lists[j].Cards[c].Title = updated.Title
 							s.Boards[i].Lists[j].Cards[c].Description = updated.Description
-							return s.Boards[i].Lists[j].Cards[c], true
+							return s.Boards[i].Lists[j].Cards[c], nil
 						}
 					}
+					return model.Card{}, fmt.Errorf("card %d not found in list %d", updated.ID, updated.ListID)
 				}
 			}
+			return model.Card{}, fmt.Errorf("list %d not found in board %d", updated.ListID, updated.BoardID)
 		}
 	}
-	return model.Card{}, false
+	return model.Card{}, fmt.Errorf("board %d not found", updated.BoardID)
 }
