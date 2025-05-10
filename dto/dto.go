@@ -28,6 +28,9 @@ func ListToDTO(l model.List) ListDTO {
 	}
 }
 
+type CreateBoardDTO struct {
+	Title string `json:"title"`
+}
 type CreateListDTO struct {
 	Title   string `json:"title"`
 	BoardID int    `json:"board_id"`

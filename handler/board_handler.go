@@ -35,14 +35,12 @@ func (h *BoardHandler) HandleBoards(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 	} else if r.Method == http.MethodPost {
-		var input struct {
-			Title string `json:"title"`
-		}
+		var input dto.CreateBoardDTO
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if input.Title == "" {
+		if len(input.Title) == 0 {
 			http.Error(w, "title is required", http.StatusBadRequest)
 			return
 		}

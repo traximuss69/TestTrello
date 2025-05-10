@@ -45,8 +45,9 @@ func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 		if input.BoardID == 0 || input.ListID == 0 {
 			http.Error(w, "board id or list id required", http.StatusBadRequest)
 		}
-		if input.Title == "" {
+		if len(input.Title) == 0 {
 			http.Error(w, "title is required", http.StatusBadRequest)
+			return
 		}
 		card := h.service.CreateCard(input.Title, input.BoardID, input.ListID, input.Description)
 		cardDTOs := dto.CardToDTO(card)
@@ -56,17 +57,23 @@ func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-		if input.CardID == 0 || input.ListID == 0 || input.BoardID == 0 {
-			http.Error(w, "card id or list id required", http.StatusBadRequest)
+		if input.BoardID == 0 {
+			http.Error(w, "board id required", http.StatusBadRequest)
+		}
+		if input.ListID == 0 {
+			http.Error(w, "list id required", http.StatusBadRequest)
+		}
+		if input.CardID == 0 {
+			http.Error(w, "card id required", http.StatusBadRequest)
 		}
 		deletedCard, err := h.service.DeleteCard(input.BoardID, input.ListID, input.CardID)
 		if err != nil {
 			http.Error(w, "Error deleting card", http.StatusInternalServerError)
 			return
 		}
-		CardDTOs := dto.CardToDTO(deletedCard)
+		cardDTOs := dto.CardToDTO(deletedCard)
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(CardDTOs); err != nil {
+		if err := json.NewEncoder(w).Encode(cardDTOs); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 	} else if r.Method == http.MethodPut {
@@ -75,12 +82,24 @@ func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		if updatedCardDTO.BoardID == 0 {
+			http.Error(w, "board id error", http.StatusBadRequest)
+			return
+		}
+		if updatedCardDTO.ListID == 0 {
+			http.Error(w, "list id error", http.StatusBadRequest)
+			return
+		}
+		if updatedCardDTO.ID == 0 {
+			http.Error(w, "card id error", http.StatusBadRequest)
+			return
+		}
 		updatedCard := model.Card{
 			Title:       updatedCardDTO.Title,
 			Description: updatedCardDTO.Description,
-		}
-		if updatedCardDTO.BoardID == 0 || updatedCardDTO.ListID == 0 || updatedCardDTO.ID == 0 {
-			http.Error(w, "id error", http.StatusBadRequest)
+			ID:          updatedCardDTO.ID,
+			BoardID:     updatedCardDTO.BoardID,
+			ListID:      updatedCardDTO.ListID,
 		}
 		updatedCard, err := h.service.UpdateCard(updatedCard)
 		if err != nil {

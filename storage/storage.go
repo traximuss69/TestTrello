@@ -3,6 +3,8 @@ package storage
 import (
 	"awesomeProject2/cmd/model"
 	"fmt"
+	"maps"
+	"slices"
 	"time"
 )
 
@@ -19,17 +21,10 @@ func NewStorage() *Storage {
 	}
 }
 func (s *Storage) GetBoards(boardID *int) []model.Board {
-	var result []model.Board
 	if boardID == nil {
-		for _, b := range s.Boards {
-			result = append(result, b)
-		}
-	} else {
-		if b, ok := s.Boards[*boardID]; ok {
-			result = append(result, b)
-		}
+		return slices.Collect(maps.Values(s.Boards))
 	}
-	return result
+	return nil
 }
 func (s *Storage) CreateBoard(title string) model.Board {
 	board := model.Board{
@@ -43,17 +38,20 @@ func (s *Storage) CreateBoard(title string) model.Board {
 	return board
 }
 func (s *Storage) GetLists(ListID *int) []model.List {
-	var result []model.List
-	for _, b := range s.Boards {
-		for _, l := range b.Lists {
-			if ListID != nil {
+	if ListID != nil {
+		for _, b := range s.Boards {
+			for _, l := range b.Lists {
 				if l.ID == *ListID {
 					return []model.List{l}
 				}
-			} else {
-				result = append(result, l)
 			}
 		}
+		return nil
+	}
+
+	var result []model.List
+	for _, b := range s.Boards {
+		result = append(result, b.Lists...)
 	}
 	return result
 }
@@ -75,18 +73,22 @@ func (s *Storage) CreateList(title string, boardID int) model.List {
 	return newList
 }
 func (s *Storage) GetCards(CardID *int) []model.Card {
-	var result []model.Card
-	for _, b := range s.Boards {
-		for _, l := range b.Lists {
-			for _, c := range l.Cards {
-				if CardID != nil {
+	if CardID != nil {
+		for _, b := range s.Boards {
+			for _, l := range b.Lists {
+				for _, c := range l.Cards {
 					if c.ID == *CardID {
 						return []model.Card{c}
 					}
-				} else {
-					result = append(result, c)
 				}
 			}
+		}
+		return nil
+	}
+	var result []model.Card
+	for _, b := range s.Boards {
+		for _, l := range b.Lists {
+			result = append(result, l.Cards...)
 		}
 	}
 	return result
