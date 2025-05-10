@@ -16,50 +16,48 @@ func NewCardHandler(service CardService) *CardHandler {
 }
 func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		var cardID *int
+		var requestBody dto.CardDTO
 		if r.Body != nil {
-			var requestBody struct {
-				ID int `json:"id"`
-			}
+			defer r.Body.Close()
 			if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			if requestBody.ID != 0 {
-				cardID = &requestBody.ID
-			}
+		}
+		var cardID *int
+		if requestBody.ID != 0 {
+			cardID = &requestBody.ID
 		}
 		cards := h.service.GetCards(cardID)
-		var CardDTOs []dto.CardDTO
+		var cardDTOs []dto.CardDTO
 		for i := range cards {
-			CardDTOs = append(CardDTOs, dto.CardToDTO(cards[i]))
+			cardDTOs = append(cardDTOs, dto.CardToDTO(cards[i]))
 		}
-		if err := json.NewEncoder(w).Encode(CardDTOs); err != nil {
+		if err := json.NewEncoder(w).Encode(cardDTOs); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 	} else if r.Method == http.MethodPost {
-		var input struct {
-			BoardID     int    `json:"board_id"`
-			ListID      int    `json:"list_id"`
-			Title       string `json:"title"`
-			Description string `json:"description"`
-		}
+		var input dto.CreateCardDTO
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
+		}
+		if input.BoardID == 0 || input.ListID == 0 {
+			http.Error(w, "board id or list id required", http.StatusBadRequest)
+		}
+		if input.Title == "" {
+			http.Error(w, "title is required", http.StatusBadRequest)
 		}
 		card := h.service.CreateCard(input.Title, input.BoardID, input.ListID, input.Description)
-		CardDTOs := dto.CardToDTO(card)
-		json.NewEncoder(w).Encode(CardDTOs)
+		cardDTOs := dto.CardToDTO(card)
+		json.NewEncoder(w).Encode(cardDTOs)
 	} else if r.Method == http.MethodDelete {
-		var input struct {
-			BoardID int `json:"board_id"`
-			ListID  int `json:"list_id"`
-			CardID  int `json:"card_id"`
-		}
+		var input dto.DeleteCardDTO
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+		}
+		if input.CardID == 0 || input.ListID == 0 || input.BoardID == 0 {
+			http.Error(w, "card id or list id required", http.StatusBadRequest)
 		}
 		deletedCard, err := h.service.DeleteCard(input.BoardID, input.ListID, input.CardID)
 		if err != nil {
@@ -72,7 +70,7 @@ func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 	} else if r.Method == http.MethodPut {
-		var updatedCardDTO dto.UpdatedCardDTO
+		var updatedCardDTO dto.CardDTO
 		if err := json.NewDecoder(r.Body).Decode(&updatedCardDTO); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -80,6 +78,9 @@ func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 		updatedCard := model.Card{
 			Title:       updatedCardDTO.Title,
 			Description: updatedCardDTO.Description,
+		}
+		if updatedCardDTO.BoardID == 0 || updatedCardDTO.ListID == 0 || updatedCardDTO.ID == 0 {
+			http.Error(w, "id error", http.StatusBadRequest)
 		}
 		updatedCard, err := h.service.UpdateCard(updatedCard)
 		if err != nil {

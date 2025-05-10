@@ -28,15 +28,29 @@ func ListToDTO(l model.List) ListDTO {
 	}
 }
 
+type CreateListDTO struct {
+	Title   string `json:"title"`
+	BoardID int    `json:"board_id"`
+}
 type CardDTO struct {
 	ID          int    `json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
+	BoardID     int    `json:"board_id"`
 	ListID      int    `json:"list_id"`
 }
-type UpdatedCardDTO struct {
+
+type CreateCardDTO struct {
+	BoardID     int    `json:"board_id"`
+	ListID      int    `json:"list_id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
+}
+
+type DeleteCardDTO struct {
+	BoardID int `json:"board_id"`
+	ListID  int `json:"list_id"`
+	CardID  int `json:"card_id"`
 }
 
 func CardToDTO(c model.Card) CardDTO {

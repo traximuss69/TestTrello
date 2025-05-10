@@ -24,17 +24,14 @@ func (h *BoardHandler) HandleBoards(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			if requestBody.ID != 0 {
-				boardID = &requestBody.ID
-			}
 		}
 		boards := h.service.GetBoards(boardID)
-		var BoardDTOs []dto.BoardDTO
+		var boardDTOs []dto.BoardDTO
 		for i := range boards {
-			BoardDTOs = append(BoardDTOs, dto.BoardToDTO(boards[i]))
+			boardDTOs = append(boardDTOs, dto.BoardToDTO(boards[i]))
 		}
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(BoardDTOs); err != nil {
+		if err := json.NewEncoder(w).Encode(boardDTOs); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 	} else if r.Method == http.MethodPost {
@@ -43,6 +40,10 @@ func (h *BoardHandler) HandleBoards(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if input.Title == "" {
+			http.Error(w, "title is required", http.StatusBadRequest)
 			return
 		}
 		board := h.service.CreateBoard(input.Title)

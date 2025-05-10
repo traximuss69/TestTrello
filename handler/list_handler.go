@@ -15,42 +15,48 @@ func NewListHandler(service ListService) *ListHandler {
 }
 func (h *ListHandler) HandleLists(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
+		defer r.Body.Close()
+		var input dto.ListDTO
 		var listID *int
 		if r.Body != nil {
-			var requestBody struct {
-				ID int `json:"id"`
-			}
-			if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+			if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			if requestBody.ID != 0 {
-				listID = &requestBody.ID
+			if input.ID != 0 {
+				listID = &input.ID
 			}
 		}
+
 		lists := h.service.GetLists(listID)
-		var ListDTOs []dto.ListDTO
-		for i := range lists {
-			ListDTOs = append(ListDTOs, dto.ListToDTO(lists[i]))
+		var listDTOs []dto.ListDTO
+		for _, l := range lists {
+			listDTOs = append(listDTOs, dto.ListToDTO(l))
 		}
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(ListDTOs); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if err := json.NewEncoder(w).Encode(listDTOs); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 	} else if r.Method == http.MethodPost {
-		var input struct {
-			BoardID int    `json:"board_id"`
-			Title   string `json:"title"`
-		}
+		defer r.Body.Close()
+		var input dto.CreateListDTO
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		if input.Title == "" {
+			http.Error(w, "title is required", http.StatusBadRequest)
+			return
+		}
+
 		list := h.service.CreateList(input.Title, input.BoardID)
 		dto := dto.ListToDTO(list)
+		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(dto); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}

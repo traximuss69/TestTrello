@@ -7,7 +7,7 @@ import (
 )
 
 type Storage struct {
-	Boards  []model.Board
+	Boards  map[int]model.Board
 	boardID int
 	listID  int
 	cardID  int
@@ -15,20 +15,17 @@ type Storage struct {
 
 func NewStorage() *Storage {
 	return &Storage{
-		Boards:  []model.Board{},
-		boardID: 1,
-		listID:  1,
-		cardID:  1,
+		Boards: make(map[int]model.Board),
 	}
 }
-func (s *Storage) GetBoards(BoardID *int) []model.Board {
+func (s *Storage) GetBoards(boardID *int) []model.Board {
 	var result []model.Board
-	for _, b := range s.Boards {
-		if BoardID != nil {
-			if b.ID == *BoardID {
-				return []model.Board{b}
-			}
-		} else {
+	if boardID == nil {
+		for _, b := range s.Boards {
+			result = append(result, b)
+		}
+	} else {
+		if b, ok := s.Boards[*boardID]; ok {
 			result = append(result, b)
 		}
 	}
@@ -41,9 +38,8 @@ func (s *Storage) CreateBoard(title string) model.Board {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	board.ID = s.boardID
+	s.Boards[s.boardID] = board
 	s.boardID++
-	s.Boards = append(s.Boards, board)
 	return board
 }
 func (s *Storage) GetLists(ListID *int) []model.List {
@@ -63,22 +59,20 @@ func (s *Storage) GetLists(ListID *int) []model.List {
 }
 func (s *Storage) CreateList(title string, boardID int) model.List {
 	newList := model.List{
+		ID:        s.listID,
 		Title:     title,
 		BoardID:   boardID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	newList.ID = s.listID
 	s.listID++
-	newList.CreatedAt = time.Now()
-	newList.UpdatedAt = time.Now()
-	for i := range s.Boards {
-		if s.Boards[i].ID == boardID {
-			s.Boards[i].Lists = append(s.Boards[i].Lists, newList)
-			return newList
-		}
+	board, ok := s.Boards[boardID]
+	if !ok {
+		return model.List{}
 	}
-	return model.List{}
+	board.Lists = append(board.Lists, newList)
+	s.Boards[boardID] = board
+	return newList
 }
 func (s *Storage) GetCards(CardID *int) []model.Card {
 	var result []model.Card
