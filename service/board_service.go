@@ -9,8 +9,8 @@ type BoardService struct {
 func NewBoardService(storage BoardStorage) *BoardService {
 	return &BoardService{storage: storage}
 }
-func (s BoardService) GetBoards(BoardID *int) []model.Board {
-	return s.storage.GetBoards(BoardID)
+func (s BoardService) GetBoards(*int) []model.Board {
+	return s.storage.GetBoards()
 }
 func (s BoardService) CreateBoard(title string) model.Board {
 	return s.storage.CreateBoard(title)

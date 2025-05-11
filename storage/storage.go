@@ -17,14 +17,14 @@ type Storage struct {
 
 func NewStorage() *Storage {
 	return &Storage{
-		Boards: make(map[int]model.Board),
+		Boards:  make(map[int]model.Board),
+		boardID: 1,
+		listID:  1,
+		cardID:  1,
 	}
 }
-func (s *Storage) GetBoards(boardID *int) []model.Board {
-	if boardID == nil {
-		return slices.Collect(maps.Values(s.Boards))
-	}
-	return nil
+func (s *Storage) GetBoards() []model.Board {
+	return slices.Collect(maps.Values(s.Boards))
 }
 func (s *Storage) CreateBoard(title string) model.Board {
 	board := model.Board{

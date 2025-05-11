@@ -16,7 +16,6 @@ func NewBoardHandler(service BoardService) *BoardHandler {
 func (h *BoardHandler) HandleBoards(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		var requestDTO dto.BoardDTO
-
 		if r.Body != nil {
 			defer r.Body.Close()
 			if err := json.NewDecoder(r.Body).Decode(&requestDTO); err != nil {
@@ -24,9 +23,7 @@ func (h *BoardHandler) HandleBoards(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-
 		boards := h.service.GetBoards(requestDTO.ID)
-
 		var boardDTOs []dto.BoardDTO
 		for _, b := range boards {
 			boardDTOs = append(boardDTOs, dto.BoardToDTO(b))

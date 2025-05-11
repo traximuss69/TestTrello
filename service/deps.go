@@ -3,7 +3,7 @@ package service
 import "awesomeProject2/cmd/model"
 
 type BoardStorage interface {
-	GetBoards(boardID *int) []model.Board
+	GetBoards() []model.Board
 	CreateBoard(title string) model.Board
 }
 
