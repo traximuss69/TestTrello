@@ -37,23 +37,23 @@ func (s *Storage) CreateBoard(title string) model.Board {
 	s.boardID++
 	return board
 }
-func (s *Storage) GetLists(ListID *int) []model.List {
-	if ListID != nil {
+func (s *Storage) GetLists(listID *int) []model.List {
+	if listID == nil {
+		var result []model.List
 		for _, b := range s.Boards {
-			for _, l := range b.Lists {
-				if l.ID == *ListID {
-					return []model.List{l}
-				}
+			result = append(result, b.Lists...)
+		}
+		return result
+
+	}
+	for _, b := range s.Boards {
+		for _, l := range b.Lists {
+			if l.ID == *listID {
+				return []model.List{l}
 			}
 		}
-		return nil
 	}
-
-	var result []model.List
-	for _, b := range s.Boards {
-		result = append(result, b.Lists...)
-	}
-	return result
+	return []model.List{}
 }
 func (s *Storage) CreateList(title string, boardID int) model.List {
 	newList := model.List{
@@ -72,26 +72,26 @@ func (s *Storage) CreateList(title string, boardID int) model.List {
 	s.Boards[boardID] = board
 	return newList
 }
-func (s *Storage) GetCards(CardID *int) []model.Card {
-	if CardID != nil {
+func (s *Storage) GetCards(cardID *int) []model.Card {
+	if cardID == nil {
+		var result []model.Card
 		for _, b := range s.Boards {
 			for _, l := range b.Lists {
-				for _, c := range l.Cards {
-					if c.ID == *CardID {
-						return []model.Card{c}
-					}
+				result = append(result, l.Cards...)
+			}
+		}
+		return result
+	}
+	for _, b := range s.Boards {
+		for _, l := range b.Lists {
+			for _, c := range l.Cards {
+				if c.ID == *cardID {
+					return []model.Card{c}
 				}
 			}
 		}
-		return nil
 	}
-	var result []model.Card
-	for _, b := range s.Boards {
-		for _, l := range b.Lists {
-			result = append(result, l.Cards...)
-		}
-	}
-	return result
+	return []model.Card{}
 }
 
 func (s *Storage) CreateCard(title string, boardID int, listID int, description string) model.Card {

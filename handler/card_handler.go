@@ -16,19 +16,15 @@ func NewCardHandler(service CardService) *CardHandler {
 }
 func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		var requestBody dto.CardDTO
+		var requestDTO dto.CardDTO
 		if r.Body != nil {
 			defer r.Body.Close()
-			if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+			if err := json.NewDecoder(r.Body).Decode(&requestDTO); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
 		}
-		var cardID *int
-		if requestBody.ID != 0 {
-			cardID = &requestBody.ID
-		}
-		cards := h.service.GetCards(cardID)
+		cards := h.service.GetCards(requestDTO.ID)
 		var cardDTOs []dto.CardDTO
 		for i := range cards {
 			cardDTOs = append(cardDTOs, dto.CardToDTO(cards[i]))
@@ -77,7 +73,7 @@ func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 	} else if r.Method == http.MethodPut {
-		var updatedCardDTO dto.CardDTO
+		var updatedCardDTO dto.UpdateCardDTO
 		if err := json.NewDecoder(r.Body).Decode(&updatedCardDTO); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

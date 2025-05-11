@@ -15,24 +15,26 @@ func NewBoardHandler(service BoardService) *BoardHandler {
 }
 func (h *BoardHandler) HandleBoards(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		var boardID *int
+		var requestDTO dto.BoardDTO
+
 		if r.Body != nil {
-			var requestBody struct {
-				ID int `json:"id"`
-			}
-			if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+			defer r.Body.Close()
+			if err := json.NewDecoder(r.Body).Decode(&requestDTO); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
 		}
-		boards := h.service.GetBoards(boardID)
+
+		boards := h.service.GetBoards(requestDTO.ID)
+
 		var boardDTOs []dto.BoardDTO
-		for i := range boards {
-			boardDTOs = append(boardDTOs, dto.BoardToDTO(boards[i]))
+		for _, b := range boards {
+			boardDTOs = append(boardDTOs, dto.BoardToDTO(b))
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(boardDTOs); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else if r.Method == http.MethodPost {
 		var input dto.CreateBoardDTO

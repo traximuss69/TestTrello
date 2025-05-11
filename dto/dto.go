@@ -3,26 +3,26 @@ package dto
 import "awesomeProject2/cmd/model"
 
 type BoardDTO struct {
-	ID    int    `json:"id"`
+	ID    *int   `json:"id"`
 	Title string `json:"title"`
 }
 
 func BoardToDTO(b model.Board) BoardDTO {
 	return BoardDTO{
-		ID:    b.ID,
+		ID:    &b.ID,
 		Title: b.Title,
 	}
 }
 
 type ListDTO struct {
-	ID      int    `json:"id"`
+	ID      *int   `json:"id"`
 	Title   string `json:"title"`
 	BoardID int    `json:"board_id"`
 }
 
 func ListToDTO(l model.List) ListDTO {
 	return ListDTO{
-		ID:      l.ID,
+		ID:      &l.ID,
 		Title:   l.Title,
 		BoardID: l.BoardID,
 	}
@@ -36,6 +36,13 @@ type CreateListDTO struct {
 	BoardID int    `json:"board_id"`
 }
 type CardDTO struct {
+	ID          *int   `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	BoardID     int    `json:"board_id"`
+	ListID      int    `json:"list_id"`
+}
+type UpdateCardDTO struct {
 	ID          int    `json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
@@ -58,7 +65,7 @@ type DeleteCardDTO struct {
 
 func CardToDTO(c model.Card) CardDTO {
 	return CardDTO{
-		ID:          c.ID,
+		ID:          &c.ID,
 		Title:       c.Title,
 		Description: c.Description,
 		ListID:      c.ListID,

@@ -15,29 +15,23 @@ func NewListHandler(service ListService) *ListHandler {
 }
 func (h *ListHandler) HandleLists(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
+		var requestDTO dto.ListDTO
 		defer r.Body.Close()
-		var input dto.ListDTO
-		var listID *int
 		if r.Body != nil {
-			if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			if err := json.NewDecoder(r.Body).Decode(&requestDTO); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			if input.ID != 0 {
-				listID = &input.ID
+			lists := h.service.GetLists(requestDTO.ID)
+			var listDTOs []dto.ListDTO
+			for _, l := range lists {
+				listDTOs = append(listDTOs, dto.ListToDTO(l))
+			}
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(listDTOs); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		}
-
-		lists := h.service.GetLists(listID)
-		var listDTOs []dto.ListDTO
-		for _, l := range lists {
-			listDTOs = append(listDTOs, dto.ListToDTO(l))
-		}
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(listDTOs); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
 	} else if r.Method == http.MethodPost {
 		defer r.Body.Close()
 		var input dto.CreateListDTO
