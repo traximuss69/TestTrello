@@ -1,14 +1,26 @@
 package main
 
 import (
+	"awesomeProject2/cmd/config"
+	"awesomeProject2/cmd/db"
 	"awesomeProject2/cmd/handler"
 	"awesomeProject2/cmd/service"
-	"awesomeProject2/cmd/storage"
+	"github.com/jmoiron/sqlx"
+	"log"
 	"net/http"
 )
 
 func main() {
-	store := storage.NewStorage()
+	env := config.GetOrDefault()
+
+	db, err := sqlx.Open("postgres", env)
+	if err != nil {
+		log.Fatalf("не удалось подключиться к БД: %v", err)
+	}
+	if err = db.Ping(); err != nil {
+		log.Fatalf("пинг БД не прошёл: %v", err)
+	}
+	store := storage.NewStorage(db)
 	boardService := service.NewBoardService(store)
 	listService := service.NewListService(store)
 	cardService := service.NewCardService(store)

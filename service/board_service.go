@@ -9,7 +9,7 @@ type BoardService struct {
 func NewBoardService(storage BoardStorage) *BoardService {
 	return &BoardService{storage: storage}
 }
-func (s BoardService) GetBoards(*int) []model.Board {
+func (s BoardService) GetBoards() []model.Board {
 	return s.storage.GetBoards()
 }
 func (s BoardService) CreateBoard(title string) model.Board {

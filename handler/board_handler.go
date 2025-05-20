@@ -23,7 +23,7 @@ func (h *BoardHandler) HandleBoards(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		boards := h.service.GetBoards(requestDTO.ID)
+		boards := h.service.GetBoards()
 		var boardDTOs []dto.BoardDTO
 		for _, b := range boards {
 			boardDTOs = append(boardDTOs, dto.BoardToDTO(b))

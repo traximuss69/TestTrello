@@ -3,7 +3,7 @@ package handler
 import "awesomeProject2/cmd/model"
 
 type BoardService interface {
-	GetBoards(boardID *int) []model.Board
+	GetBoards() []model.Board
 	CreateBoard(title string) model.Board
 }
 type ListService interface {

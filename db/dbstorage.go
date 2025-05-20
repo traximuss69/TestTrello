@@ -57,23 +57,23 @@ func (s *Storage) GetCards(boardID *int) []model.Card {
 	return cards
 }
 func (s *Storage) CreateCard(title string, boardID int, listID int, description string) model.Card {
-	query := `INSERT INTO cards(title, description, list_id) VALUES ($1, $2, $3) RETURNING id, title, description, list_id`
+	query := `INSERT INTO cards(title,board_id,list_id, description ) VALUES ($1, $2, $3) RETURNING  title, board_id, description, list_id`
 	var card model.Card
-	err := s.DB.Get(&card, query, title, description, listID)
+	err := s.DB.Get(&card, query, title, boardID, description, listID)
 	if err != nil {
 		return model.Card{}
 	}
 	return card
 }
 func (s *Storage) DeleteCard(boardID int, listID int, cardID int) (model.Card, error) {
-	query := `DELETE FROM cards WHERE id = $1 AND board_id = $2 AND list_id = $3 RETURNING id, board_id, list_id`
+	query := `DELETE FROM cards WHERE id = $1 AND list_id = $2 RETURNING id, list_id`
 	var card model.Card
-	err := s.DB.Get(&card, query, cardID, boardID, listID)
+	err := s.DB.Get(&card, query, cardID, listID)
 	return card, err
 }
 
 func (s *Storage) UpdateCard(updated model.Card) (model.Card, error) {
-	query := `UPDATE cards SET title = $1, description = $2, list_id = $3 WHERE id = $4 RETURNING id, title, description, list_id, board_id`
+	query := `UPDATE cards SET title = $1, description = $2, list_id = $3 WHERE id = $4 RETURNING id, title, description, list_id`
 	var card model.Card
 	err := s.DB.Get(&card, query, updated.Title, updated.Description, updated.ListID, updated.ID)
 	return card, err

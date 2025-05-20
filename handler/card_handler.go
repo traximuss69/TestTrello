@@ -53,9 +53,6 @@ func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-		if input.BoardID == 0 {
-			http.Error(w, "board id required", http.StatusBadRequest)
-		}
 		if input.ListID == 0 {
 			http.Error(w, "list id required", http.StatusBadRequest)
 		}
@@ -76,10 +73,6 @@ func (h *CardHandler) HandleCards(w http.ResponseWriter, r *http.Request) {
 		var updatedCardDTO dto.UpdateCardDTO
 		if err := json.NewDecoder(r.Body).Decode(&updatedCardDTO); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		if updatedCardDTO.BoardID == 0 {
-			http.Error(w, "board id error", http.StatusBadRequest)
 			return
 		}
 		if updatedCardDTO.ListID == 0 {
