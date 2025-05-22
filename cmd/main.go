@@ -28,10 +28,12 @@ func main() {
 	if err = db.Ping(); err != nil {
 		log.Fatalf("пинг БД не прошёл: %v", err)
 	}
-	store := storage.NewStorage(db)
-	boardService := service.NewBoardService(store)
-	listService := service.NewListService(store)
-	cardService := service.NewCardService(store)
+	boardStore := storage.NewBoardStorage(db)
+	listStore := storage.NewListStorage(db)
+	cardStore := storage.NewCardStorage(db)
+	boardService := service.NewBoardService(boardStore)
+	listService := service.NewListService(listStore)
+	cardService := service.NewCardService(cardStore)
 	boardHandler := handler.NewBoardHandler(boardService)
 	listHandler := handler.NewListHandler(listService)
 	cardHandler := handler.NewCardHandler(cardService)
