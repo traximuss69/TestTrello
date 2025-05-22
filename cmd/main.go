@@ -5,13 +5,21 @@ import (
 	"awesomeProject2/cmd/db"
 	"awesomeProject2/cmd/handler"
 	"awesomeProject2/cmd/service"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"log"
 	"net/http"
 )
 
 func main() {
-	env := config.GetOrDefault()
+	env := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		config.GetOrDefault("DB_HOST", "localhost"),
+		config.GetOrDefault("DB_PORT", "5432"),
+		config.GetOrDefault("DB_USER", "postgres"),
+		config.GetOrDefault("DB_PASSWORD", ""),
+		config.GetOrDefault("DB_NAME", "mydb"),
+		config.GetOrDefault("SSL_MODE", "disable"),
+	)
 
 	db, err := sqlx.Open("postgres", env)
 	if err != nil {

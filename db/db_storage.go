@@ -3,7 +3,6 @@ package storage
 import (
 	"awesomeProject2/cmd/model"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 )
 
 type Storage struct {
@@ -33,7 +32,12 @@ func (s *Storage) CreateBoard(title string) model.Board {
 }
 func (s *Storage) GetLists(boardID *int) []model.List {
 	var lists []model.List
-	err := s.DB.Select(&lists, "SELECT * FROM lists")
+	var err error
+	if boardID != nil {
+		err = s.DB.Select(&lists, "SELECT * FROM lists WHERE board_id = $1", *boardID)
+	} else {
+		err = s.DB.Select(&lists, "SELECT * FROM lists")
+	}
 	if err != nil {
 		return []model.List{}
 	}
@@ -48,18 +52,23 @@ func (s *Storage) CreateList(title string, boardID int) model.List {
 	}
 	return list
 }
-func (s *Storage) GetCards(boardID *int) []model.Card {
+func (s *Storage) GetCards(listID *int) []model.Card {
 	var cards []model.Card
-	err := s.DB.Select(&cards, "SELECT * FROM cards")
+	var err error
+	if listID != nil {
+		err = s.DB.Select(&cards, "SELECT * FROM cards WHERE list_id = $1", *listID)
+	} else {
+		err = s.DB.Select(&cards, "SELECT * FROM cards")
+	}
 	if err != nil {
 		return []model.Card{}
 	}
 	return cards
 }
-func (s *Storage) CreateCard(title string, boardID int, listID int, description string) model.Card {
+func (s *Storage) CreateCard(input model.CardInputCreate) model.Card {
 	query := `INSERT INTO cards(title,board_id,list_id, description ) VALUES ($1, $2, $3) RETURNING  title, board_id, description, list_id`
 	var card model.Card
-	err := s.DB.Get(&card, query, title, boardID, description, listID)
+	err := s.DB.Get(&card, query, input.Title, input.Description, input.ListID)
 	if err != nil {
 		return model.Card{}
 	}
